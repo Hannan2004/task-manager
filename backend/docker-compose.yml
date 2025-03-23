@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo
+    container_name: task-manager-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+  backend:
+    build: .
+    container_name: task-manager-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://admin:password@mongo:27017/taskmanager?authSource=admin
+
+volumes:
+  mongo-data:
