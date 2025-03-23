@@ -17,31 +17,31 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                sh 'docker build -t $IMAGE_BACKEND ./backend'
+                bat 'docker build -t $IMAGE_BACKEND ./backend'
             }
         }
 
         stage('Build Frontend Image') {
             steps {
-                sh 'docker build -t $IMAGE_FRONTEND ./frontend'
+                bat 'docker build -t $IMAGE_FRONTEND ./frontend'
             }
         }
 
         stage('Start Containers') {
             steps {
-                sh 'docker-compose up -d'
+                bat 'docker-compose up -d'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'docker ps'
+                bat 'docker ps'
             }
         }
 
         stage('Cleanup Old Containers') {
             steps {
-                sh 'docker system prune -f'
+                bat 'docker system prune -f'
             }
         }
     }
