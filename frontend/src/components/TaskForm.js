@@ -9,7 +9,7 @@ const TaskForm = ({ fetchTasks }) => {
     if (!title) return;
 
     try {
-      await fetch("http://localhost:5000/api/tasks", {
+      await fetch("https://task-manager-backend-911407792100.us-central1.run.app/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description }),

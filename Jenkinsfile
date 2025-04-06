@@ -51,7 +51,7 @@ pipeline {
         stage('Deploy to Cloud Run') {
             steps {
             bat """
-            gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
+            gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID% --port 80
             gcloud run deploy task-manager-frontend --image %FRONTEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
             """
         }
