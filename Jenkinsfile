@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID = 'your-gcp-project-id'
+        PROJECT_ID = 'task-manager-project-456010'
         REGION = 'us-central1'
         ARTIFACT_REGISTRY = "${REGION}-docker.pkg.dev/${PROJECT_ID}/task-manager"
         IMAGE_BACKEND = "${ARTIFACT_REGISTRY}/task-manager-backend"
