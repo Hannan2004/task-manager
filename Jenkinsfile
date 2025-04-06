@@ -48,38 +48,15 @@ pipeline {
             }
         }
 
-        stage('Deploy to Cloud Run') {
+        stage('Deploy Backend to Cloud Run') {
             steps {
-                // Deploy Backend
                 bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated"
-                
-                // Get the backend URL and set it as environment variable for frontend
-                script {
-                    def backendUrl = bat(script: "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format=\"value(status.url)\"", returnStdout: true).trim()
-                    bat "gcloud run deploy ${CONTAINER_FRONTEND} --image=${IMAGE_FRONTEND}:latest --platform=managed --region=${REGION} --set-env-vars=REACT_APP_API_URL=${backendUrl} --allow-unauthenticated"
-                }
             }
         }
         stage('Cleanup Local Images') {
             steps {
                 bat 'docker system prune -f'
             }
-        }
-    }
-
-    post {
-        success {
-            script {
-                def backendUrl = bat(script: "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format=\"value(status.url)\"", returnStdout: true).trim()
-                def frontendUrl = bat(script: "gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION} --format=\"value(status.url)\"", returnStdout: true).trim()
-                
-                echo "Deployment completed successfully!"
-                echo "Backend URL: ${backendUrl}"
-                echo "Frontend URL: ${frontendUrl}"
-            }
-        }
-        failure {
-            echo "Deployment failed!"
         }
     }
 }
