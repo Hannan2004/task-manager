@@ -20,7 +20,7 @@ services:
     depends_on:
       - mongo
     environment:
-      - MONGO_URI=mongodb+srv://Hannan:Hannan@hannan.u7dma.mongodb.net/
+      - MONGO_URI=mongodb://admin:password@mongo:27017/taskmanager?authSource=admin
 
   frontend:
     build: ./frontend
