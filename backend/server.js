@@ -8,20 +8,19 @@ const app = express();
 connectDB();
 
 // Configure CORS
-app.use(cors({
+const corsOptions = {
     origin: [
-      'https://task-manager-frontend-911407792100.us-central1.run.app',
-      'http://localhost:3000'  // For local development
+        'https://task-manager-frontend-911407792100.us-central1.run.app', // Frontend URL
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
-  }));
-
+};
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 
 app.use('/api/tasks', require('./routes/taskRoutes'));
 
-const PORT = 8080;
+// Use the PORT environment variable or default to 8080
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -48,11 +48,13 @@ pipeline {
             }
         }
 
-        stage('Deploy Backend to Cloud Run') {
+        stage('Deploy to Cloud Run') {
             steps {
-                bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated"
+                // Deploy Backend
+                bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated --timeout=600 --port=8080"
             }
         }
+
         stage('Cleanup Local Images') {
             steps {
                 bat 'docker system prune -f'
