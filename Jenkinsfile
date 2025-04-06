@@ -9,7 +9,7 @@ pipeline {
         IMAGE_FRONTEND = "${ARTIFACT_REGISTRY}/task-manager-frontend"
         CONTAINER_BACKEND = "task-manager-backend-container"
         CONTAINER_FRONTEND = "task-manager-frontend-container"
-        CREDENTIALS_ID = 'gcp-credentials' // Jenkins credential ID for GCP service account
+        CREDENTIALS_ID = 'gcp-service-key' // Jenkins credential ID for GCP service account
     }
 
     stages {
