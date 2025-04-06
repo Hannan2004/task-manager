@@ -16,11 +16,11 @@ services:
     build: ./backend
     container_name: task-manager-backend
     ports:
-      - "5000:5000"
+      - "8080:8080"
     depends_on:
       - mongo
     environment:
-      - MONGO_URI=mongodb://admin:password@mongo:27017/taskmanager?authSource=admin
+      - MONGO_URI=mongodb+srv://Hannan:Hannan@hannan.u7dma.mongodb.net/
 
   frontend:
     build: ./frontend
