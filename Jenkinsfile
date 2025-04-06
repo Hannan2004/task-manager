@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID = 'task-manager-project-456010'
+        PROJECT_ID = 'your-gcp-project-id'
         REGION = 'us-central1'
         ARTIFACT_REGISTRY = "${REGION}-docker.pkg.dev/${PROJECT_ID}/task-manager"
         IMAGE_BACKEND = "${ARTIFACT_REGISTRY}/task-manager-backend"
         IMAGE_FRONTEND = "${ARTIFACT_REGISTRY}/task-manager-frontend"
         CONTAINER_BACKEND = "task-manager-backend-container"
         CONTAINER_FRONTEND = "task-manager-frontend-container"
-        CREDENTIALS_ID = 'gcp-service-key' // Jenkins credential ID for GCP service account
+        CREDENTIALS_ID = 'gcp-credentials' // Jenkins credential ID for GCP service account
     }
 
     stages {
@@ -56,7 +56,7 @@ pipeline {
                 // Get the backend URL and set it as environment variable for frontend
                 script {
                     def backendUrl = bat(script: "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format='value(status.url)'", returnStdout: true).trim()
-                    bat "gcloud run deploy ${CONTAINER_FRONTEND} --image=${IMAGE_FRONTEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated"
+                    bat "gcloud run deploy ${CONTAINER_FRONTEND} --image=${IMAGE_FRONTEND}:latest --platform=managed --region=${REGION} --set-env-vars=REACT_APP_API_URL=${backendUrl} --allow-unauthenticated"
                 }
             }
         }
@@ -77,9 +77,14 @@ pipeline {
 
     post {
         success {
-            echo "Deployment completed successfully!"
-            echo "Backend URL: $(gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format='value(status.url)')"
-            echo "Frontend URL: $(gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION} --format='value(status.url)')"
+            script {
+                def backendUrl = bat(script: "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format='value(status.url)'", returnStdout: true).trim()
+                def frontendUrl = bat(script: "gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION} --format='value(status.url)'", returnStdout: true).trim()
+                
+                echo "Deployment completed successfully!"
+                echo "Backend URL: ${backendUrl}"
+                echo "Frontend URL: ${frontendUrl}"
+            }
         }
         failure {
             echo "Deployment failed!"
