@@ -1,95 +1,88 @@
 pipeline {
     agent any
-    
+
     environment {
         PROJECT_ID = 'task-manager-project-456010'
         REGION = 'us-central1'
-        REPO = 'task-manager-repo'
-        
-        BACKEND_IMAGE = "us-central1-docker.pkg.dev/${PROJECT_ID}/${REPO}/task-manager-backend"
-        FRONTEND_IMAGE = "us-central1-docker.pkg.dev/${PROJECT_ID}/${REPO}/task-manager-frontend"
+        ARTIFACT_REGISTRY = "${REGION}-docker.pkg.dev/${PROJECT_ID}/task-manager"
+        IMAGE_BACKEND = "${ARTIFACT_REGISTRY}/task-manager-backend"
+        IMAGE_FRONTEND = "${ARTIFACT_REGISTRY}/task-manager-frontend"
+        CONTAINER_BACKEND = "task-manager-backend-container"
+        CONTAINER_FRONTEND = "task-manager-frontend-container"
+        CREDENTIALS_ID = 'gcp-service-key' // Jenkins credential ID for GCP service account
     }
-    
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
                 git branch: 'master', url: 'https://github.com/Hannan2004/task-manager.git'
             }
         }
-        
-        stage('Authenticate with GCP') {
+
+        stage('Authenticate to GCP') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    // Create temp directory properly with double backslashes for Windows
-                    bat 'if not exist "%WORKSPACE%\\temp" mkdir "%WORKSPACE%\\temp"'
-                    
-                    // Copy credentials with proper quoting
-                    bat 'copy "%GOOGLE_APPLICATION_CREDENTIALS%" "%WORKSPACE%\\temp\\key.json"'
-                    
-                    // Set environment variable for gcloud
-                    bat 'set GOOGLE_APPLICATION_CREDENTIALS=%WORKSPACE%\\temp\\key.json'
-                    
-                    // Authenticate with GCP
-                    bat 'gcloud auth activate-service-account --key-file="%WORKSPACE%\\temp\\key.json"'
-                    bat 'gcloud config set project %PROJECT_ID%'
-                    
-                    // Configure Docker for Artifact Registry - separated for clarity
-                    bat 'gcloud auth configure-docker us-central1-docker.pkg.dev --quiet'
+                withCredentials([file(credentialsId: "${CREDENTIALS_ID}", variable: 'GCP_KEY')]) {
+                    bat "gcloud auth activate-service-account --key-file=%GCP_KEY%"
+                    bat "gcloud config set project ${PROJECT_ID}"
+                    bat "gcloud auth configure-docker ${REGION}-docker.pkg.dev"
                 }
             }
         }
-        
-        stage('Docker Login to Artifact Registry') {
+
+        stage('Build Backend Image') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    // Direct Docker login approach (alternative to access token)
-                    bat '''
-                        FOR /F "tokens=*" %%i IN ('gcloud auth print-access-token') DO SET ACCESS_TOKEN=%%i
-                        echo !ACCESS_TOKEN! | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
-                    '''
-                }
+                bat "docker build -t ${IMAGE_BACKEND}:latest ./backend"
             }
         }
-        
-        stage('Build Docker Images') {
+
+        stage('Build Frontend Image') {
             steps {
-                bat 'docker build -t task-manager-backend ./backend'
-                bat 'docker build -t task-manager-frontend ./frontend'
+                bat "docker build -t ${IMAGE_FRONTEND}:latest ./frontend"
             }
         }
-        
-        stage('Push to Artifact Registry') {
+
+        stage('Push Images to Artifact Registry') {
             steps {
-                // Tag images with full repository paths
-                bat 'docker tag task-manager-backend %BACKEND_IMAGE%'
-                bat 'docker tag task-manager-frontend %FRONTEND_IMAGE%'
-                
-                // Push images - split into separate commands for easier debugging
-                bat 'docker push %BACKEND_IMAGE%'
-                bat 'docker push %FRONTEND_IMAGE%'
+                bat "docker push ${IMAGE_BACKEND}:latest"
+                bat "docker push ${IMAGE_FRONTEND}:latest"
             }
         }
-        
+
         stage('Deploy to Cloud Run') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    // Set GCP credentials and deploy services
-                    bat 'gcloud auth activate-service-account --key-file="%GOOGLE_APPLICATION_CREDENTIALS%"'
-                    bat 'gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%'
-                    bat 'gcloud run deploy task-manager-frontend --image %FRONTEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID% --port 80'
+                // Deploy Backend
+                bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated"
+                
+                // Get the backend URL and set it as environment variable for frontend
+                script {
+                    def backendUrl = bat(script: "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format='value(status.url)'", returnStdout: true).trim()
+                    bat "gcloud run deploy ${CONTAINER_FRONTEND} --image=${IMAGE_FRONTEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated"
                 }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                bat "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION}"
+                bat "gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION}"
+            }
+        }
+
+        stage('Cleanup Local Images') {
+            steps {
+                bat 'docker system prune -f'
             }
         }
     }
-    
+
     post {
-        always {
-            // Clean up temporary files
-            bat 'if exist "%WORKSPACE%\\temp" rmdir /s /q "%WORKSPACE%\\temp"'
-            
-            // Clean up Docker images to save space
-            bat 'docker rmi %BACKEND_IMAGE% task-manager-backend || true'
-            bat 'docker rmi %FRONTEND_IMAGE% task-manager-frontend || true'
+        success {
+            echo "Deployment completed successfully!"
+            echo "Backend URL: $(gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION} --format='value(status.url)')"
+            echo "Frontend URL: $(gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION} --format='value(status.url)')"
+        }
+        failure {
+            echo "Deployment failed!"
         }
     }
 }
