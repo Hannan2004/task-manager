@@ -4,7 +4,7 @@ pipeline {
     environment {
         PROJECT_ID = 'task-manager-project-456010'
         REGION = 'us-central1'
-        ARTIFACT_REGISTRY = "${REGION}-docker.pkg.dev/${PROJECT_ID}/task-manager"
+        ARTIFACT_REGISTRY = "${REGION}-docker.pkg.dev/${PROJECT_ID}/task-manager-repo"
         IMAGE_BACKEND = "${ARTIFACT_REGISTRY}/task-manager-backend"
         IMAGE_FRONTEND = "${ARTIFACT_REGISTRY}/task-manager-frontend"
         CONTAINER_BACKEND = "task-manager-backend-container"
