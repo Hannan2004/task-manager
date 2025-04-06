@@ -17,19 +17,17 @@ pipeline {
             }
         }
         
-    stage('Authenticate with GCP') {
-        steps {
-            withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-            bat """
-                gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%
-                gcloud config set project %PROJECT_ID%
-                copy %GOOGLE_APPLICATION_CREDENTIALS% key.json
-                gcloud auth print-access-token 
-                docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
-            """
+        stage('Authenticate with GCP') {
+            steps {
+                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    bat """
+                        gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%
+                        gcloud config set project %PROJECT_ID%
+                        gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+                    """
+                }
             }
         }
-    }
         
         stage('Build Docker Images') {
             steps {
@@ -51,11 +49,13 @@ pipeline {
         
         stage('Deploy to Cloud Run') {
             steps {
-            bat """
-            gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
-            gcloud run deploy task-manager-frontend --image %FRONTEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
-            """
+                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    bat """
+                        gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
+                        gcloud run deploy task-manager-frontend --image %FRONTEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated --project %PROJECT_ID%
+                    """
+                }
+            }
         }
-    }
     }
 }
