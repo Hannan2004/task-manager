@@ -22,7 +22,7 @@ const App = () => {
 
   return (
     <div className="app">
-      <h1>Task Manager</h1>
+      <h1>Task Manager Platform</h1>
       <TaskForm fetchTasks={fetchTasks} />
       <TaskList tasks={tasks} fetchTasks={fetchTasks} />
     </div>
