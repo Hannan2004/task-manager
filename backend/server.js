@@ -8,11 +8,15 @@ const app = express();
 connectDB();
 
 // Configure CORS
-const corsOptions = {
-    origin: 'https://task-manager-frontend-911407792100.us-central1.run.app/', // Replace with your frontend URL
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
-};
+app.use(cors({
+    origin: [
+      'https://task-manager-frontend-911407792100.us-central1.run.app',
+      'http://localhost:3000'  // For local development
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+  
 app.use(cors(corsOptions));
 
 app.use(bodyParser.json());

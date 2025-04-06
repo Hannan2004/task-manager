@@ -5,10 +5,10 @@ import "./App.css";
 
 const App = () => {
   const [tasks, setTasks] = useState([]);
-
+  const API_URL = 'https://task-manager-backend-container-911407792100.us-central1.run.app/'
   const fetchTasks = async () => {
     try {
-      const response = await fetch("https://task-manager-backend-911407792100.us-central1.run.app/api/tasks");
+      const response = await fetch(`${API_URL}/api/tasks`);
       const data = await response.json();
       setTasks(data);
     } catch (error) {

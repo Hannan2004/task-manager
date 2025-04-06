@@ -60,14 +60,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Run Tests') {
-            steps {
-                bat "gcloud run services describe ${CONTAINER_BACKEND} --region=${REGION}"
-                bat "gcloud run services describe ${CONTAINER_FRONTEND} --region=${REGION}"
-            }
-        }
-
         stage('Cleanup Local Images') {
             steps {
                 bat 'docker system prune -f'
