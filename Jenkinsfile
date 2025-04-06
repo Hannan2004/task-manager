@@ -24,7 +24,8 @@ pipeline {
                 gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%
                 gcloud config set project %PROJECT_ID%
                 copy %GOOGLE_APPLICATION_CREDENTIALS% key.json
-                gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
+                gcloud auth print-access-token 
+                docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
             """
             }
         }
