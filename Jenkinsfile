@@ -54,21 +54,10 @@ pipeline {
         
         stage('Deploy to Cloud Run') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-service-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    bat """
-                        gcloud run deploy task-manager-backend \\
-                            --image=%BACKEND_IMAGE% \\
-                            --platform=managed \\
-                            --region=%REGION% \\
-                            --allow-unauthenticated
-                        
-                        gcloud run deploy task-manager-frontend \\
-                            --image=%FRONTEND_IMAGE% \\
-                            --platform=managed \\
-                            --region=%REGION% \\
-                            --allow-unauthenticated
-                    """
-                }
+                bat """
+                    gcloud run deploy task-manager-backend --image %BACKEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated
+                    gcloud run deploy task-manager-frontend --image %FRONTEND_IMAGE% --region %REGION% --platform managed --allow-unauthenticated
+                """
             }
         }
     }
