@@ -10,7 +10,7 @@ connectDB();
 // Configure CORS
 const corsOptions = {
     origin: [
-        'https://task-manager-frontend-911407792100.us-central1.run.app', // Frontend URL
+        'https://task-manager-frontend-container-911407792100.us-central1.run.app', // Frontend URL
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']

@@ -8,7 +8,7 @@ pipeline {
         IMAGE_BACKEND = "${ARTIFACT_REGISTRY}/task-manager-backend"
         IMAGE_FRONTEND = "${ARTIFACT_REGISTRY}/task-manager-frontend"
         CONTAINER_BACKEND = "task-manager-backend-container"
-        CONTAINER_FRONTEND = "task-manager-frontend-container"
+        CONTAINER_FRONTEND = "task-manager-frontend"
         CREDENTIALS_ID = 'gcp-service-key' // Jenkins credential ID for GCP service account
     }
 
@@ -51,7 +51,8 @@ pipeline {
         stage('Deploy to Cloud Run') {
             steps {
                 // Deploy Backend
-                bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated --timeout=600 --port=8080"
+                bat "gcloud run deploy ${CONTAINER_BACKEND} --image=${IMAGE_BACKEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated --timeout=600 --port=8080 --set-env-vars=MONGO_URI=mongodb+srv://Hannan:Hannan@hannan.u7dma.mongodb.net/"
+                bat "gcloud run deploy ${CONTAINER_FRONTEND} --image=${IMAGE_FRONTEND}:latest --platform=managed --region=${REGION} --allow-unauthenticated --timeout=600 --port=80"
             }
         }
 
